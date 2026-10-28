@@ -199,16 +199,42 @@
     }
     .brand-mark svg { width: 22px; height: 22px; }
     .brand-text small { display: block; font-size: 10px; line-height: 1.1; text-transform: uppercase; letter-spacing: .13em; color: var(--muted); }
-    .nav-links { display: flex; align-items: center; gap: 6px; }
+    .nav-links { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; white-space: nowrap; }
     .nav-links a {
       padding: 10px 13px;
       border-radius: 999px;
       font-size: 14px;
       font-weight: 650;
       transition: background .2s ease, color .2s ease;
+      white-space: nowrap;
     }
     .nav-links a:hover, .nav-links a.is-active { background: var(--white); color: var(--deep); }
-    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .nav-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; white-space: nowrap; }
+    .header-favorites-btn,
+    .header-claim-btn { flex: 0 0 auto; white-space: nowrap; }
+    .header-favorites-btn { gap: 7px; padding-inline: 13px; }
+    .header-favorites-btn svg { width: 17px; height: 17px; }
+    .header-favorites-count {
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      background: var(--pink);
+      color: var(--deep);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .header-favorites-btn[hidden],
+    .header-claim-btn[hidden] { display: none !important; }
+    #headerClaim {
+      position: fixed;
+      z-index: 79;
+      top: calc(var(--header-h) + 10px);
+      right: max(24px, calc((100vw - 1320px) / 2));
+      box-shadow: var(--shadow-soft);
+    }
     .menu-toggle {
       width: 46px;
       height: 46px;
@@ -783,6 +809,12 @@
     }
     .catalog-layout.is-mini-lessons .program-grid {
       grid-template-columns: 1fr;
+    }
+    .catalog-layout.is-global-favorites {
+      grid-template-columns: 1fr;
+    }
+    .catalog-layout.is-global-favorites #filtersPanel {
+      display: none !important;
     }
     .mini-lessons-entry {
       min-height: 360px;
@@ -1670,8 +1702,17 @@
     @keyframes floatA { 0%,100% { translate: 0 0; } 50% { translate: 0 -12px; } }
     @keyframes floatB { 0%,100% { translate: 0 0; } 50% { translate: 0 13px; } }
 
+    @media (min-width: 1181px) and (max-width: 1380px) {
+      .nav { gap: 14px; }
+      .nav-links { gap: 2px; }
+      .nav-links a { padding-inline: 10px; }
+      .nav-actions { gap: 7px; }
+      .header-favorites-btn { padding-inline: 11px; }
+    }
+
     @media (max-width: 1180px) {
       .nav-links { display: none; }
+      .nav-actions { margin-left: auto; }
       .menu-toggle { display: grid; }
       .mobile-menu { display: flex; }
       .hero-grid { grid-template-columns: 1fr 430px; gap: 28px; }
@@ -1733,6 +1774,8 @@
       .hero-copy h1 { font-size: clamp(40px, 11.5vw, 58px); }
       h2 { font-size: clamp(37px, 12vw, 56px); }
       .site-header .btn--primary { display: none; }
+      .site-header .header-favorites-btn,
+      .site-header .header-claim-btn { display: none !important; }
       .brand { min-width: auto; }
       .brand-text { font-size: 13px; }
       .brand-text small { display: none; }
@@ -1842,10 +1885,16 @@
       </div>
 
       <div class="nav-actions">
+        <button class="btn btn--light btn--small header-favorites-btn" id="headerFavorites" type="button" hidden aria-label="Открыть избранное">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+          <span>Избранное</span>
+          <span class="header-favorites-count" id="headerFavoritesCount">0</span>
+        </button>
         <button class="btn btn--primary btn--small attention-pulse" data-open-quiz>Подобрать обучение</button>
         <button class="menu-toggle" id="menuToggle" type="button" aria-label="Открыть меню" aria-expanded="false"><span></span></button>
       </div>
     </nav>
+    <a class="btn btn--lime btn--small header-claim-btn" id="headerClaim" href="mailto:edu_claim@rgs.ru" hidden>Подать заявку на обучение</a>
   </header>
 
   <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
@@ -1854,6 +1903,11 @@
     <a href="#team">Команда</a>
     <a href="#catalog">Каталог</a>
     <a href="#blog">Блог обученцев</a>
+    <button class="btn btn--light header-favorites-btn" id="mobileFavorites" type="button" hidden>
+      <span>Избранное</span>
+      <span class="header-favorites-count" id="mobileFavoritesCount">0</span>
+    </button>
+    <a class="btn btn--lime header-claim-btn" id="mobileClaim" href="mailto:edu_claim@rgs.ru" hidden>Подать заявку на обучение</a>
     <button class="btn btn--primary" data-open-quiz>Подобрать обучение</button>
   </div>
 
@@ -2073,10 +2127,6 @@
                 <input id="catalogSearch" type="search" placeholder="Например: ОСАГО, КАСКО, возражения или командообразование" autocomplete="off">
               </label>
               <button class="btn btn--light mobile-filter-btn" id="openFilters">Фильтры</button>
-              <button class="btn btn--light" id="showFavorites" aria-pressed="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
-                <span class="desktop-label">Избранное</span>
-              </button>
             </div>
             <div class="catalog-meta">
               <div class="active-filters" id="activeFilters"></div>
@@ -2298,6 +2348,88 @@
 
     const $ = (selector, root = document) => root.querySelector(selector);
     const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+    function getFavoriteItems() {
+      return learningItems.filter(item => state.favorites.has(item.id));
+    }
+
+    function hasApplicationFavorites() {
+      return getFavoriteItems().some(item => item.itemKind === 'game' || item.itemKind === 'training');
+    }
+
+    function buildApplicationMailto(items) {
+      const applicationItems = (items || []).filter(item => item.itemKind === 'game' || item.itemKind === 'training');
+      const subject = 'Заявка на обучение';
+      const list = applicationItems.map((item, index) => {
+        const type = item.itemKind === 'training' ? 'Тренинг' : 'Бизнес-игра';
+        const title = item.itemKind === 'game' ? sanitizeGameTitle(item.title) : item.title;
+        return `${index + 1}. ${type}: ${title}`;
+      }).join('\n');
+      const body = [
+        'Здравствуйте!',
+        '',
+        'Прошу зарегистрировать заявку на обучение по выбранным программам:',
+        '',
+        list,
+        '',
+        'ФИО:',
+        'Подразделение:',
+        'Филиал:',
+        'Город:',
+        'Контактный телефон:',
+        '',
+        'Спасибо!'
+      ].join('\n');
+      return `mailto:edu_claim@rgs.ru?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    function buildSingleApplicationMailto(item) {
+      return buildApplicationMailto(item ? [item] : []);
+    }
+
+    function renderFavoriteHeader() {
+      const count = state.favorites.size;
+      const hasFavorites = count > 0;
+      const showClaim = hasFavorites && hasApplicationFavorites();
+
+      ['#headerFavorites', '#mobileFavorites'].forEach(selector => {
+        const el = $(selector);
+        if (el) el.hidden = !hasFavorites;
+      });
+      ['#headerFavoritesCount', '#mobileFavoritesCount'].forEach(selector => {
+        const el = $(selector);
+        if (el) el.textContent = String(count);
+      });
+      const claimHref = showClaim ? buildApplicationMailto(getFavoriteItems()) : 'mailto:edu_claim@rgs.ru';
+      ['#headerClaim', '#mobileClaim'].forEach(selector => {
+        const el = $(selector);
+        if (el) {
+          el.hidden = !showClaim;
+          el.href = claimHref;
+        }
+      });
+    }
+
+    function syncCatalogTabs() {
+      $$('#catalogTabs [data-catalog-type]').forEach(button => {
+        const active = !state.favoritesOnly && button.dataset.catalogType === state.catalogType;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-selected', String(active));
+      });
+    }
+
+    function openGlobalFavorites() {
+      if (!state.favorites.size) return;
+      state.favoritesOnly = true;
+      Object.values(state.filters).forEach(set => set.clear());
+      state.search = '';
+      state.catalogVisible = 24;
+      $('#catalogSearch').value = '';
+      syncCatalogTabs();
+      renderAdaptiveFilters();
+      updateCatalog();
+      $('#catalog').scrollIntoView({ behavior: 'smooth' });
+    }
 
     function initials(name) {
       return name.split(' ').filter(Boolean).slice(0,2).map(word => word[0]).join('').toUpperCase();
@@ -2542,8 +2674,20 @@
 
     function renderAdaptiveFilters() {
       const config = catalogFilterConfig[state.catalogType];
-      const isMiniLessons = state.catalogType === 'mini';
-      $('#catalog .catalog-layout').classList.toggle('is-mini-lessons', isMiniLessons);
+      const isMiniLessons = state.catalogType === 'mini' && !state.favoritesOnly;
+      const isGlobalFavorites = state.favoritesOnly;
+      const catalogLayout = $('#catalog .catalog-layout');
+      catalogLayout.classList.toggle('is-mini-lessons', isMiniLessons);
+      catalogLayout.classList.toggle('is-global-favorites', isGlobalFavorites);
+
+      if (isGlobalFavorites) {
+        $('#deliveryFilterGroup').hidden = true;
+        $('#categoryFilterGroup').hidden = true;
+        $('#directionFilterGroup').hidden = true;
+        $('#channelFilterGroup').hidden = true;
+        $('#catalogTypeCount').textContent = `Избранное · ${state.favorites.size}`;
+        return;
+      }
 
       const currentItems = learningItems.filter(item => item.catalogType === state.catalogType);
 
@@ -2580,32 +2724,30 @@
     function setCatalogType(type, { keepSearch = true } = {}) {
       if (!catalogFilterConfig[type]) return;
       state.catalogType = type;
+      state.favoritesOnly = false;
       Object.values(state.filters).forEach(set => set.clear());
       state.catalogVisible = 24;
 
       if (type === 'mini') {
         state.search = '';
-        state.favoritesOnly = false;
         $('#catalogSearch').value = '';
       } else if (!keepSearch) {
         state.search = '';
         $('#catalogSearch').value = '';
       }
 
-      $$('#catalogTabs [data-catalog-type]').forEach(button => {
-        const active = button.dataset.catalogType === type;
-        button.classList.toggle('is-active', active);
-        button.setAttribute('aria-selected', String(active));
-      });
-
+      syncCatalogTabs();
       renderAdaptiveFilters();
       updateCatalog();
     }
 
     function getFilteredLearningItems() {
       return learningItems.filter(item => {
-        if (item.catalogType !== state.catalogType) return false;
-        if (state.favoritesOnly && !state.favorites.has(item.id)) return false;
+        if (state.favoritesOnly) {
+          if (!state.favorites.has(item.id)) return false;
+        } else if (item.catalogType !== state.catalogType) {
+          return false;
+        }
 
         if (state.search) {
           const haystack = [
@@ -2690,7 +2832,7 @@
     function renderLearningItems() {
       const grid = $('#programGrid');
 
-      if (state.catalogType === 'mini') {
+      if (state.catalogType === 'mini' && !state.favoritesOnly) {
         $('#resultCount').textContent = '';
         grid.innerHTML = `
           <div class="mini-lessons-entry">
@@ -2709,8 +2851,10 @@
       $('#resultCount').textContent = `Найдено: ${filtered.length} · показано: ${visible.length}`;
 
       if (!filtered.length) {
-        const isEmptyTrainingSection = state.catalogType === 'training' && !trainings.length;
-        grid.innerHTML = isEmptyTrainingSection
+        const isEmptyTrainingSection = state.catalogType === 'training' && !trainings.length && !state.favoritesOnly;
+        grid.innerHTML = state.favoritesOnly
+          ? `<div class="empty-state"><h3>В избранном пока ничего нет</h3><p>Добавьте программы с помощью сердечка — они появятся здесь независимо от раздела каталога.</p></div>`
+          : isEmptyTrainingSection
           ? `<div class="empty-state"><h3>Тренинги скоро появятся здесь</h3><p>Структура раздела и фильтры уже готовы. После загрузки списка тренингов карточки автоматически появятся в этом разделе.</p></div>`
           : `<div class="empty-state"><h3>Ничего не нашлось</h3><p>Попробуйте убрать часть фильтров или изменить запрос.</p><button class="btn btn--primary" id="emptyReset">Сбросить фильтры</button></div>`;
         $('#emptyReset')?.addEventListener('click', resetFilters);
@@ -2754,7 +2898,9 @@
             <h3>${escapeHTML(displayTitle)}</h3>
             ${item.description ? `<p class="program-description">${escapeHTML(item.description)}</p>` : ``}
             ${item.itemKind === 'program' ? `<div class="program-info"><span>${escapeHTML(item.channel)}</span></div>` : ``}
-            <div class="program-footer"><button type="button" data-learning-item="${item.id}">Подробнее ${icons.arrow}</button></div>
+            <div class="program-footer">
+              <button type="button" data-learning-item="${item.id}">Подробнее ${icons.arrow}</button>
+            </div>
           </article>
         `;
       }).join('');
@@ -2774,9 +2920,8 @@
     function updateCatalog() {
       renderLearningItems();
       renderActiveFilters();
-      $('#showFavorites').setAttribute('aria-pressed', String(state.favoritesOnly));
-      $('#showFavorites').classList.toggle('btn--primary', state.favoritesOnly);
-      $('#showFavorites').classList.toggle('btn--light', !state.favoritesOnly);
+      renderFavoriteHeader();
+      if (state.favoritesOnly) $('#catalogTypeCount').textContent = `Избранное · ${state.favorites.size}`;
     }
 
     function resetFilters() {
@@ -2786,6 +2931,8 @@
       state.catalogVisible = 24;
       $('#catalogSearch').value = '';
       $$('input[type="checkbox"]', $('#filtersPanel')).forEach(input => input.checked = false);
+      syncCatalogTabs();
+      renderAdaptiveFilters();
       updateCatalog();
     }
 
@@ -2864,7 +3011,7 @@
           ${item.results ? `<div class="content-block"><h3>Результаты</h3>${renderResultsMarkup(item.results)}</div>` : ''}
           <div class="content-block" style="display:flex;gap:12px;flex-wrap:wrap">
             ${item.link ? `<a class="btn btn--primary" href="${escapeHTML(item.link)}" target="_blank" rel="noopener noreferrer">Открыть игру</a>` : ''}
-            <a class="btn ${item.link ? 'btn--ghost' : 'btn--primary'}" href="mailto:edu_claim@rgs.ru">Подать заявку на обучение</a>
+            <a class="btn ${item.link ? 'btn--ghost' : 'btn--primary'}" href="${buildSingleApplicationMailto(item)}">Подать заявку на обучение</a>
             <button class="btn btn--ghost" type="button" data-modal-favorite="${item.id}">${state.favorites.has(item.id) ? 'Убрать из избранного' : 'Сохранить в избранное'}</button>
           </div>
         `);
@@ -2886,8 +3033,9 @@
           ${item.duration ? `<div class="content-block"><h3>Продолжительность</h3><p>${escapeHTML(item.duration)}</p></div>` : ''}
           ${item.channel ? `<div class="content-block"><h3>Канал</h3><p>${escapeHTML(item.channel)}</p></div>` : ''}
           <div class="content-block" style="display:flex;gap:12px;flex-wrap:wrap">
-            ${item.link ? `<a class="btn btn--primary" href="${escapeHTML(item.link)}" target="_blank" rel="noopener noreferrer">Перейти к тренингу</a>` : ''}
-            <button class="btn ${item.link ? 'btn--ghost' : 'btn--primary'}" type="button" data-modal-favorite="${item.id}">${state.favorites.has(item.id) ? 'Убрать из избранного' : 'Сохранить в избранное'}</button>
+            ${item.link ? `<a class="btn btn--ghost" href="${escapeHTML(item.link)}" target="_blank" rel="noopener noreferrer">Перейти к тренингу</a>` : ''}
+            <a class="btn btn--primary" href="${buildSingleApplicationMailto(item)}">Подать заявку на обучение</a>
+            <button class="btn btn--ghost" type="button" data-modal-favorite="${item.id}">${state.favorites.has(item.id) ? 'Убрать из избранного' : 'Сохранить в избранное'}</button>
           </div>
         `);
         return;
@@ -3576,6 +3724,13 @@
         showToast('Добавили в избранное');
       }
       try { localStorage.setItem('learningFavorites', JSON.stringify([...state.favorites])); } catch (error) { /* Storage may be unavailable in embedded previews. */ }
+      renderFavoriteHeader();
+
+      if (state.favoritesOnly && !state.favorites.size) {
+        state.favoritesOnly = false;
+        syncCatalogTabs();
+        renderAdaptiveFilters();
+      }
       updateCatalog();
     }
 
@@ -3839,7 +3994,14 @@
         updateCatalog();
       });
       $('#resetFilters').addEventListener('click', resetFilters);
-      $('#showFavorites').addEventListener('click', () => { state.favoritesOnly = !state.favoritesOnly; updateCatalog(); });
+      $('#headerFavorites').addEventListener('click', openGlobalFavorites);
+      $('#mobileFavorites').addEventListener('click', () => {
+        $('#mobileMenu').classList.remove('is-open');
+        $('#menuToggle').classList.remove('is-open');
+        $('#menuToggle').setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('modal-open');
+        openGlobalFavorites();
+      });
       $('#openFilters').addEventListener('click', () => { $('#filtersPanel').classList.add('is-open'); document.body.classList.add('modal-open'); });
       $('#closeFilters').addEventListener('click', () => { $('#filtersPanel').classList.remove('is-open'); document.body.classList.remove('modal-open'); });
       $('#programGrid').addEventListener('click', event => {
@@ -3858,7 +4020,7 @@
         const group = chip.dataset.removeFilter;
         const value = chip.dataset.filterValue;
         if (group === 'search') { state.search = ''; $('#catalogSearch').value = ''; }
-        else if (group === 'favorites') state.favoritesOnly = false;
+        else if (group === 'favorites') { state.favoritesOnly = false; syncCatalogTabs(); renderAdaptiveFilters(); }
         else {
           state.filters[group].delete(value);
           const input = $(`input[name="${group}"][value="${CSS.escape(value)}"]`);
