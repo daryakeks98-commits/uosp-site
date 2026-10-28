@@ -3963,55 +3963,5 @@
     initCounters();
     initHeader();
   </script>
-
-  <script>
-    (function () {
-      const MESSAGE_TYPE = 'uosp-site-height';
-
-      function getPageHeight() {
-        const body = document.body;
-        const doc = document.documentElement;
-        return Math.max(
-          body ? body.scrollHeight : 0,
-          body ? body.offsetHeight : 0,
-          doc ? doc.scrollHeight : 0,
-          doc ? doc.offsetHeight : 0,
-          doc ? doc.clientHeight : 0
-        );
-      }
-
-      let lastHeight = 0;
-      let rafId = 0;
-
-      function sendHeight() {
-        cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(() => {
-          const height = getPageHeight();
-          if (!height || Math.abs(height - lastHeight) < 2) return;
-          lastHeight = height;
-          window.parent.postMessage({ type: MESSAGE_TYPE, height }, '*');
-        });
-      }
-
-      window.addEventListener('load', sendHeight);
-      window.addEventListener('resize', sendHeight);
-      document.addEventListener('DOMContentLoaded', sendHeight);
-      document.addEventListener('click', () => setTimeout(sendHeight, 80));
-
-      if ('ResizeObserver' in window) {
-        const observer = new ResizeObserver(sendHeight);
-        observer.observe(document.documentElement);
-        if (document.body) observer.observe(document.body);
-      } else if ('MutationObserver' in window) {
-        const observer = new MutationObserver(sendHeight);
-        observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
-      }
-
-      setTimeout(sendHeight, 200);
-      setTimeout(sendHeight, 800);
-      setTimeout(sendHeight, 1800);
-    })();
-  </script>
-
 </body>
 </html>
